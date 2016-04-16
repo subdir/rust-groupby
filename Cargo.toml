@@ -1,0 +1,6 @@
+[package]
+name = "groupby"
+version = "0.1.0"
+authors = ["subdir@gmail.com"]
+
+[dependencies]
