@@ -1,3 +1,17 @@
+//! GroupBy iterator implemented without use of RefCell.
+//!
+//! Usage:
+//! 
+//! ```
+//! use groupby::GroupByIterator;
+//! for (key, grp) in vec![1,1,1,1,2,3,3,4].into_iter().groupby(|x| x/2).by_ref() {
+//!     println!("Key {:?}", key);
+//!     for item in grp.take(2) {
+//!         println!(" - {:?}", item);
+//!     }
+//! }
+//! ```
+
 use std::mem;
 use std::iter::Peekable;
 
@@ -28,7 +42,7 @@ macro_rules! reset_lifetime {
 }
 
 
-struct GroupIter<I, F, K> where
+pub struct GroupIter<I, F, K> where
     I: Iterator,
     F: Fn(&I::Item) -> K
 {
@@ -101,7 +115,7 @@ impl<I, F, K> GroupIter<I, F, K> where
 }
 
 
-struct GroupBy<I, F, K> where
+pub struct GroupBy<I, F, K> where
     I: Iterator,
     F: Fn(&I::Item) -> K,
 {
@@ -124,7 +138,7 @@ impl<I, F, K> GroupBy<I, F, K> where
         }
     }
 
-    fn by_ref(&mut self) -> &mut Self {
+    pub fn by_ref(&mut self) -> &mut Self {
         self
     }
 }
@@ -150,7 +164,7 @@ impl<'a, I, F, K> Iterator for &'a mut GroupBy<I, F, K> where
 }
 
 
-trait GroupByIterator {
+pub trait GroupByIterator {
     fn groupby<F, K>(self, f: F) -> GroupBy<Self, F, K>
         where Self: Sized + Iterator,
               F: Fn(&Self::Item) -> K,
