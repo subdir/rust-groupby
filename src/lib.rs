@@ -123,6 +123,10 @@ impl<I, F, K> GroupBy<I, F, K> where
             }
         }
     }
+
+    fn by_ref(&mut self) -> &mut Self {
+        self
+    }
 }
 
 
@@ -146,18 +150,42 @@ impl<'a, I, F, K> Iterator for &'a mut GroupBy<I, F, K> where
 }
 
 
+trait GroupByIterator {
+    fn groupby<F, K>(self, f: F) -> GroupBy<Self, F, K>
+        where Self: Sized + Iterator,
+              F: Fn(&Self::Item) -> K,
+              K: PartialEq
+    {
+        GroupBy::new(self, f)
+    }
+}
+
+impl<T> GroupByIterator for T where T: Iterator { }
+
+
 #[cfg(test)]
 mod tests {
-    use super::GroupBy;
+    use std::vec::Vec;
+    use super::GroupByIterator;
 
     #[test]
     fn it_works() {
-        let mut g = GroupBy::new(vec![1,1,1,1,2,3,3].into_iter(), |x| x/2);
-        for (key, group) in &mut g {
-            println!("group {:?}", key);
-            for x in group.take(2) {
-                println!("{}", x);
-            }
-        }
+        let mut grp = vec![1,1,1,1,2,3,3,4].into_iter().groupby(|x| x/2);
+        assert_eq!(
+            Some((0, vec![1,1])),
+            grp.by_ref().next().map(|(k, g)| (*k, g.take(2).collect::<Vec<i32>>()))
+        );
+        assert_eq!(
+            Some((1, vec![2,3,3])),
+            grp.by_ref().next().map(|(k, g)| (*k, g.collect::<Vec<i32>>()))
+        );
+        assert_eq!(
+            Some((2, vec![4])),
+            grp.by_ref().next().map(|(k, g)| (*k, g.take(5).collect::<Vec<i32>>()))
+        );
+        assert_eq!(
+            None,
+            grp.by_ref().next().map(|(k, g)| (*k, g.collect::<Vec<i32>>()))
+        );
     }
 }
