@@ -4,7 +4,7 @@
 //! 
 //! ```
 //! use groupby::GroupByIterator;
-//! for (key, grp) in vec![1,1,1,1,2,3,3,4].into_iter().groupby(|x| x/2).by_ref() {
+//! for (key, grp) in vec![1,1,1,1,2,3,3,4].into_iter().group_by(|x| x/2).by_ref() {
 //!     println!("Key {:?}", key);
 //!     for item in grp.take(2) {
 //!         println!(" - {:?}", item);
@@ -132,7 +132,7 @@ impl<I, F, K> GroupBy<I, F, K> where
         GroupBy {
             group_iter: GroupIter {
                 iter: iter.peekable(),
-                key_func: key_func,
+                key_func,
                 current_key: None,
             }
         }
@@ -165,7 +165,7 @@ impl<'a, I, F, K> Iterator for &'a mut GroupBy<I, F, K> where
 
 
 pub trait GroupByIterator {
-    fn groupby<F, K>(self, f: F) -> GroupBy<Self, F, K>
+    fn group_by<F, K>(self, f: F) -> GroupBy<Self, F, K>
         where Self: Sized + Iterator,
               F: Fn(&Self::Item) -> K,
               K: PartialEq
@@ -184,7 +184,7 @@ mod tests {
 
     #[test]
     fn it_works() {
-        let mut grp = vec![1,1,1,1,2,3,3,4].into_iter().groupby(|x| x/2);
+        let mut grp = vec![1,1,1,1,2,3,3,4].into_iter().group_by(|x| x/2);
         assert_eq!(
             Some((0, vec![1,1])),
             grp.by_ref().next().map(|(k, g)| (*k, g.take(2).collect::<Vec<i32>>()))
